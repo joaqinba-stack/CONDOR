@@ -1,0 +1,49 @@
+{
+  "marca": "Condor",
+  "contacto": "tudominio.com",
+  "fps": 30,
+  "duracion": 56.5,
+  "tiempos": {
+    "apertura": 0,
+    "problema": 4.2,
+    "tienda": 9.2,
+    "cobro": 18.4,
+    "entrega": 27,
+    "panel": 35.6,
+    "beneficios": 44.6,
+    "cierre": 50.4
+  },
+  "apertura": ["Vendé tus videos.", "En tu propia plataforma."],
+  "problema": {
+    "tachados": ["Comisiones de terceros", "Links por WhatsApp", "Cobros a mano"],
+    "remate": "Todo en un solo lugar."
+  },
+  "tienda": ["Tu catálogo,", "con tu marca."],
+  "cobro": {
+    "titulo": ["Cobrás en Argentina", "y en todo el mundo."],
+    "tarjetas": [
+      { "zona": "Argentina", "medio": "Mercado Pago", "precio": "$ 34.800", "moneda": "ARS", "detalle": "Tarjetas, cuotas y dinero en cuenta" },
+      { "zona": "Resto del mundo", "medio": "PayPal", "precio": "US$ 24", "moneda": "USD", "detalle": "Tarjetas de cualquier país" }
+    ],
+    "nota": "El sitio sugiere el medio según el país."
+  },
+  "entrega": {
+    "titulo": ["El acceso llega solo.", "Sin contraseñas."],
+    "aprobado": "Pago aprobado",
+    "email": {
+      "asunto": "Tu video está listo: Fractal monocromo",
+      "cuerpo": "¡Gracias por tu compra! Ya podés ver Fractal monocromo.",
+      "boton": "Ver mi video"
+    }
+  },
+  "panel": {
+    "titulo": ["Subís un video", "en un minuto."],
+    "video": "Lluvia sobre vidrio",
+    "usd": 15,
+    "ars": 21750,
+    "archivo": "lluvia-4k.mp4 · 2,4 GB",
+    "ventas": { "cantidad": 128, "ars": 2340000, "usd": 1920 }
+  },
+  "beneficios": ["Video protegido", "Reembolsos automáticos", "Español e inglés", "Tu dominio, tu marca"],
+  "cierre": ["Tu tienda de videos,", "lista para vender."]
+}
