@@ -1,0 +1,78 @@
+{
+  "titulo": "Así compran tus clientes",
+  "subtitulo": "El recorrido de un comprador en tu tienda, paso a paso.",
+  "pasos": [
+    {
+      "archivo": "01-inicio.png",
+      "titulo": "Entra a tu tienda",
+      "texto": "Desde el link de tu bio o de tus historias. Ve tu marca y tu contenido: sin publicidad ni perfiles de otras personas."
+    },
+    {
+      "archivo": "02-catalogo.png",
+      "titulo": "Recorre tu contenido",
+      "texto": "Videos y fotos, cada uno con su precio. Los videos muestran un adelanto corto, sin sonido."
+    },
+    {
+      "archivo": "03-detalle.png",
+      "titulo": "Elige lo que quiere",
+      "texto": "Ve el adelanto, la descripción, la duración y el precio."
+    },
+    {
+      "archivo": "04-compra.png",
+      "titulo": "Deja su email y elige cómo pagar",
+      "texto": "Mercado Pago en pesos o PayPal en dólares. El pago se hace en la página segura de cada medio: la tienda nunca ve los datos de la tarjeta."
+    },
+    {
+      "archivo": "05-confirmacion.png",
+      "titulo": "Paga y vuelve a la tienda",
+      "texto": "Apenas se acredita el pago ve la confirmación. El acceso se habilita solo, sin que vos hagas nada."
+    },
+    {
+      "archivo": "06-email.png",
+      "titulo": "Recibe un email con su acceso",
+      "texto": "Con un botón para ver lo que compró. No tiene que crear usuario ni recordar una contraseña."
+    },
+    {
+      "archivo": "07-entrar.png",
+      "titulo": "Entra con un toque",
+      "texto": "El link del email lo identifica. Por seguridad sirve una sola vez; después entra pidiendo otro con su email."
+    },
+    {
+      "archivo": "08-video.png",
+      "titulo": "Mira el video",
+      "texto": "Dentro de tu página, cuando quiera y las veces que quiera. Sin botón de descarga."
+    },
+    {
+      "archivo": "09-fotos.png",
+      "titulo": "Si compró fotos, las ve en una galería",
+      "texto": "En alta resolución. Solo las ve quien las compró."
+    },
+    {
+      "archivo": "10-biblioteca.png",
+      "titulo": "Todo queda en su biblioteca",
+      "texto": "Lo que compró sigue ahí para siempre. Vuelve cuando quiera y entra con su email."
+    },
+    {
+      "archivo": "11-bloqueado.png",
+      "titulo": "Lo que no compró está bloqueado",
+      "texto": "Aunque alguien le pase el link, sin compra no se ve nada. La página le ofrece comprarlo."
+    },
+    {
+      "archivo": "12-ingles.png",
+      "titulo": "Compradores de otros países",
+      "texto": "La tienda les aparece en inglés, con el precio en dólares y PayPal como primera opción."
+    },
+    {
+      "archivo": "13-escritorio-inicio.png",
+      "escritorio": true,
+      "titulo": "También desde la computadora",
+      "texto": "La misma tienda, adaptada a pantalla grande."
+    },
+    {
+      "archivo": "14-escritorio-detalle.png",
+      "escritorio": true,
+      "titulo": "La página de cada producto, en computadora",
+      "texto": "El adelanto a la derecha; la descripción y la compra a la izquierda."
+    }
+  ]
+}

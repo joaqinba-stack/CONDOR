@@ -7,9 +7,9 @@ const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 function layout(title: string, bodyHtml: string, cta: { label: string; url: string }, footer: string) {
-  return `<!doctype html><html><body style="margin:0;background:#0a0a0a;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#e5e5e5">
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0;background:#0a0a0a;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#e5e5e5">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 20px">
-<table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;text-align:left">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;text-align:left">
 <tr><td style="font-size:14px;color:#fff;padding-bottom:32px">${esc(env.siteName)}</td></tr>
 <tr><td style="font-size:20px;color:#fff;padding-bottom:12px">${esc(title)}</td></tr>
 <tr><td style="font-size:14px;line-height:22px;color:#a3a3a3;padding-bottom:28px">${bodyHtml}</td></tr>
@@ -39,13 +39,14 @@ export async function sendEmail(mail: OutgoingEmail): Promise<void> {
   if (!res.ok) throw new Error(`Resend: no se pudo enviar el email (${res.status})`);
 }
 
-export async function sendPurchaseEmail(order: Order, video: Video): Promise<void> {
+/** Arma el email de compra (con un link de acceso nuevo), sin enviarlo. */
+export async function buildPurchaseEmail(order: Order, video: Video): Promise<OutgoingEmail> {
   const locale = (order.locale === "en" ? "en" : "es") as Locale;
   const t = dict(locale);
   const title = videoTitle(video, locale);
   const url = await createLoginLink(order.email, `/ver/${video.slug}`, 7 * 24 * 60); // sirve para videos y fotos
   const loginUrl = `${env.siteUrl}/ingresar`;
-  await sendEmail({
+  return {
     to: order.email,
     subject: `${t.email_subject}: ${title}`,
     html: layout(
@@ -55,7 +56,11 @@ export async function sendPurchaseEmail(order: Order, video: Video): Promise<voi
       `${esc(t.email_expire)} <a href="${esc(loginUrl)}" style="color:#a3a3a3">${esc(loginUrl)}</a>.`,
     ),
     text: `${t.email_hello}\n\n${t.email_body} ${title}.\n\n${t.email_cta}: ${url}\n\n${t.email_expire} ${loginUrl}`,
-  });
+  };
+}
+
+export async function sendPurchaseEmail(order: Order, video: Video): Promise<void> {
+  await sendEmail(await buildPurchaseEmail(order, video));
 }
 
 export async function sendLoginEmail(email: string, next: string, locale: Locale): Promise<void> {

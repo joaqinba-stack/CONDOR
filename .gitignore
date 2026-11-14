@@ -17,3 +17,4 @@ video/captures
 # (Quitar estas líneas recién cuando el repo esté privado.)
 /public/demo/
 /video/out/
+/recorrido/out/

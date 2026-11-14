@@ -154,6 +154,18 @@ Antes de salir a vender conviene confirmar con cada medio de pago que acepta el 
 Con contenido sugerente sin desnudos el riesgo es moderado, pero existe. Si en algún momento se
 vende contenido explícito hay que reemplazar estos medios por procesadores que lo acepten.
 
+## Material para mostrar la plataforma
+
+- **Recorrido del comprador** (`recorrido/`): un paquete de imágenes con cada paso de una compra,
+  tal como lo ve el cliente (entrar, elegir, pagar, recibir el email, ver el video o las fotos).
+  `npm run build && npm run recorrido` genera en `recorrido/out/` una lámina por paso, las
+  capturas solas, una hoja resumen y un PDF. Los textos de cada paso están en
+  `recorrido/pasos.json`.
+- **Video de presentación** (`video/`): ver [`video/README.md`](video/README.md).
+
+En modo demo, la página de “gracias por tu compra” incluye un link para ver el email que
+recibiría el comprador, así se puede recorrer la compra completa sin configurar nada.
+
 ## Desarrollo
 
 ```bash

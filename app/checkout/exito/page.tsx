@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { Shell } from "@/components/Shell";
-import { mpEnabled } from "@/lib/env";
+import { env, mpEnabled } from "@/lib/env";
 import { maskEmail } from "@/lib/format";
 import { dict, getLocale } from "@/lib/i18n";
 import { applyMercadoPagoPayment } from "@/lib/mp-sync";
@@ -53,6 +53,13 @@ export default async function Success({ searchParams }: Props) {
                   <Link href={mine ? `/ver/${video.slug}` : `/ingresar?next=/ver/${video.slug}`} className="btn">
                     {mine ? t.watch_now : t.nav_login}
                   </Link>
+                </p>
+              )}
+              {env.isDemo && (
+                <p data-demo className="pt-2 text-[0.8rem]">
+                  <a href={`/checkout/demo/email?orden=${order.id}`} className="link underline">
+                    Modo demo: ver el email que le llega al comprador
+                  </a>
                 </p>
               )}
             </>
