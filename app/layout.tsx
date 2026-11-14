@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/inter";
 import "./globals.css";
-import { AgeGate } from "@/components/AgeGate";
-import { ageConfirmed, ageGateEnabled } from "@/lib/age";
 import { env } from "@/lib/env";
 import { dict, getLocale } from "@/lib/i18n";
 
@@ -27,7 +25,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {env.isDemo && (
           <div data-demo-banner className="bg-tile px-4 py-1.5 text-center text-[0.75rem] text-mute md:px-5">{t.demo_banner}</div>
         )}
-        {ageGateEnabled() && !(await ageConfirmed()) ? <AgeGate t={t} /> : children}
+        {children}
       </body>
     </html>
   );
