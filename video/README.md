@@ -1,8 +1,12 @@
 # Video de presentación
 
-Video vertical (1080×1920, ~56 s) con motion graphics para presentar la plataforma a un cliente.
-Se genera por código: capturas reales del sitio en modo demo + una composición animada que se
-renderiza cuadro a cuadro. Cambiás un texto y lo volvés a generar con un comando.
+Video vertical (1080×1920, ~58 s) con motion graphics para presentarle la tienda a la creadora
+que la va a usar. Se genera por código: capturas reales del sitio en modo demo + una composición
+animada que se renderiza cuadro a cuadro, con su video reproduciéndose dentro del celular.
+Cambiás un texto y lo volvés a generar con un comando.
+
+> Los archivos de `video/out/` usan el material de la clienta: no se versionan mientras el
+> repositorio sea público (ver `.gitignore`).
 
 Archivos finales en `video/out/`:
 
@@ -42,9 +46,9 @@ y abrí `/video/composition/index.html?play`.
 | Archivo | Qué hace |
 |---|---|
 | `guion.json` | Textos y tiempos |
-| `capture.mjs` | Levanta la tienda en modo demo, compra, entra y guarda las capturas |
+| `capture.mjs` | Levanta la tienda en modo demo, compra, entra y guarda las capturas; prepara el video protagonista |
 | `composition/index.html`, `styles.css` | Las escenas (1080×1920) |
-| `composition/timeline.js` | La animación: una línea de tiempo de GSAP que se posiciona en cualquier segundo |
+| `composition/timeline.js` | La animación: una línea de tiempo de GSAP que se posiciona en cualquier segundo (y lleva los videos al cuadro exacto) |
 | `render.mjs` | Recorre la línea de tiempo cuadro a cuadro (30 fps), y ffmpeg arma el MP4 y la base sonora |
 
 Los textos importantes quedan dentro de la zona segura de los formatos verticales (libres los
@@ -52,6 +56,6 @@ Los textos importantes quedan dentro de la zona segura de los formatos verticale
 
 ## Nota
 
-Las capturas salen del catálogo de ejemplo del modo demo. Cuando el sitio tenga videos y
-portadas reales, conviene volver a capturar para que el video muestre el contenido verdadero.
-Los números de la pantalla de ventas son ilustrativos (se editan en `guion.json`).
+Las capturas salen del catálogo del modo demo (`public/demo/`). Los títulos y precios que se ven
+son los marcadores de `lib/store/fixtures.ts`, y la lista de ventas es la de la demo (compras
+simuladas por `capture.mjs`), no ventas reales.

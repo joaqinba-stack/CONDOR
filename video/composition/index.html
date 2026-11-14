@@ -28,8 +28,11 @@
           <div class="screen">
             <div class="statusbar"><span>9:41</span><span class="sb"><i class="sig"></i><i class="bat"></i></span></div>
             <div class="viewport">
-              <img class="layer" id="a-home" src="../captures/home.png" alt="" />
-              <img class="layer" id="a-detail" src="../captures/detail.png" alt="" />
+              <div class="layer" id="a-home"><img src="../captures/home.png" alt="" /></div>
+              <div class="layer" id="a-detail">
+                <img src="../captures/detail.png" alt="" />
+                <video class="inlay" id="a-video" src="../captures/hero.mp4" muted playsinline preload="auto"></video>
+              </div>
               <div class="tap" id="a-tap"></div>
             </div>
           </div>
@@ -54,7 +57,7 @@
           <span data-t="entrega.aprobado"></span>
         </div>
         <div class="mail" id="mail">
-          <div class="mail-head"><span class="avatar"></span><span data-t="marca"></span><span class="when">ahora</span></div>
+          <div class="mail-head"><img class="avatar" src="/public/demo/avatar.jpg" alt="" /><span data-t="marca"></span><span class="when">ahora</span></div>
           <p class="mail-subject" data-t="entrega.email.asunto"></p>
           <p class="mail-body" data-t="entrega.email.cuerpo"></p>
           <span class="mail-btn" data-t="entrega.email.boton"></span>
@@ -64,8 +67,12 @@
           <div class="screen">
             <div class="statusbar"><span>9:41</span><span class="sb"><i class="sig"></i><i class="bat"></i></span></div>
             <div class="viewport">
-              <img class="layer" id="b-lib" src="../captures/biblioteca.png" alt="" />
-              <img class="layer" id="b-ver" src="../captures/ver.png" alt="" />
+              <div class="layer" id="b-lib"><img src="../captures/biblioteca.png" alt="" /></div>
+              <div class="layer" id="b-ver">
+                <img src="../captures/ver.png" alt="" />
+                <video class="inlay" id="b-video" src="../captures/hero.mp4" muted playsinline preload="auto"></video>
+              </div>
+              <div class="layer" id="b-gal"><img src="../captures/galeria.png" alt="" /></div>
               <div class="tap" id="b-tap"></div>
             </div>
           </div>
@@ -76,9 +83,9 @@
       <section class="scene" id="s-panel">
         <h2 class="caption" data-lines="panel.titulo"></h2>
         <div class="window" id="window">
-          <div class="win-bar"><span data-t="marca"></span><span class="win-tabs"><b id="tab-videos">Videos</b><b id="tab-ventas">Ventas</b><b>Ajustes</b></span></div>
+          <div class="win-bar"><span data-t="marca"></span><span class="win-tabs"><b id="tab-videos">Productos</b><b id="tab-ventas">Ventas</b><b>Ajustes</b></span></div>
           <div class="win-body" id="win-form">
-            <p class="win-title">Nuevo video</p>
+            <p class="win-title">Nuevo producto</p>
             <label>Título<span class="input"><span id="f-title"></span><i class="caret" id="caret"></i></span></label>
             <div class="row">
               <label>Precio en dólares<span class="input"><span id="f-usd"></span></span></label>
@@ -92,9 +99,7 @@
           </div>
           <div class="win-body" id="win-sales">
             <p class="win-title">Ventas</p>
-            <div class="stat"><span>Ventas pagadas</span><b id="v-count">0</b></div>
-            <div class="stat"><span>Mercado Pago</span><b id="v-ars">$ 0</b></div>
-            <div class="stat"><span>PayPal</span><b id="v-usd">US$ 0</b></div>
+            <ul class="sales" data-sales></ul>
           </div>
         </div>
       </section>

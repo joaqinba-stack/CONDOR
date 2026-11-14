@@ -2,28 +2,28 @@
   "marca": "Condor",
   "contacto": "tudominio.com",
   "fps": 30,
-  "duracion": 56.5,
+  "duracion": 58,
   "tiempos": {
     "apertura": 0,
     "problema": 4.2,
     "tienda": 9.2,
     "cobro": 18.4,
     "entrega": 27,
-    "panel": 35.6,
-    "beneficios": 44.6,
-    "cierre": 50.4
+    "panel": 37.1,
+    "beneficios": 46.1,
+    "cierre": 51.9
   },
-  "apertura": ["Vendé tus videos.", "En tu propia plataforma."],
+  "apertura": ["Vendé tu contenido.", "En tu propia página."],
   "problema": {
-    "tachados": ["Comisiones de terceros", "Links por WhatsApp", "Cobros a mano"],
+    "tachados": ["Comisiones de plataformas", "Links por mensaje privado", "Cobros a mano"],
     "remate": "Todo en un solo lugar."
   },
-  "tienda": ["Tu catálogo,", "con tu marca."],
+  "tienda": ["Tu contenido,", "con tu marca."],
   "cobro": {
     "titulo": ["Cobrás en Argentina", "y en todo el mundo."],
     "tarjetas": [
-      { "zona": "Argentina", "medio": "Mercado Pago", "precio": "$ 34.800", "moneda": "ARS", "detalle": "Tarjetas, cuotas y dinero en cuenta" },
-      { "zona": "Resto del mundo", "medio": "PayPal", "precio": "US$ 24", "moneda": "USD", "detalle": "Tarjetas de cualquier país" }
+      { "zona": "Argentina", "medio": "Mercado Pago", "precio": "$ 17.400", "moneda": "ARS", "detalle": "Tarjetas, cuotas y dinero en cuenta" },
+      { "zona": "Resto del mundo", "medio": "PayPal", "precio": "US$ 12", "moneda": "USD", "detalle": "Tarjetas de cualquier país" }
     ],
     "nota": "El sitio sugiere el medio según el país."
   },
@@ -31,19 +31,18 @@
     "titulo": ["El acceso llega solo.", "Sin contraseñas."],
     "aprobado": "Pago aprobado",
     "email": {
-      "asunto": "Tu video está listo: Fractal monocromo",
-      "cuerpo": "¡Gracias por tu compra! Ya podés ver Fractal monocromo.",
-      "boton": "Ver mi video"
+      "asunto": "Tu compra está lista: Tu algoritmo",
+      "cuerpo": "¡Gracias por tu compra! Ya podés ver Tu algoritmo.",
+      "boton": "Ver mi compra"
     }
   },
   "panel": {
-    "titulo": ["Subís un video", "en un minuto."],
-    "video": "Lluvia sobre vidrio",
+    "titulo": ["Subís fotos y videos", "en un minuto."],
+    "video": "Sesión de otoño",
     "usd": 15,
     "ars": 21750,
-    "archivo": "lluvia-4k.mp4 · 2,4 GB",
-    "ventas": { "cantidad": 128, "ars": 2340000, "usd": 1920 }
+    "archivo": "sesion-otono.mp4 · 1,2 GB"
   },
-  "beneficios": ["Video protegido", "Reembolsos automáticos", "Español e inglés", "Tu dominio, tu marca"],
-  "cierre": ["Tu tienda de videos,", "lista para vender."]
+  "beneficios": ["Contenido protegido", "Reembolsos automáticos", "Español e inglés", "Tu dominio, tu marca"],
+  "cierre": ["Tu tienda,", "lista para vender."]
 }

@@ -3,7 +3,7 @@
 //
 //   npm run video:capture
 //
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -17,27 +17,39 @@ const PORT = 3111;
 const BASE = `http://localhost:${PORT}`;
 const BUYER = "ana@email.com";
 const ADMIN = "admin@demo.local";
-// El video protagonista: el que se toca en la grilla, se compra y se reproduce.
-const HERO = "fractal-mono";
+// El video protagonista (el que se toca en la grilla, se compra y se reproduce) y un pack de fotos.
+const HERO = "tu-algoritmo";
+const HERO_FILE = "public/demo/video-1.mp4";
+const PACK = "jardin";
 
 if (!existsSync(path.join(ROOT, ".next", "BUILD_ID"))) {
   console.error("Falta compilar la app: corré `npm run build` primero.");
   process.exit(1);
 }
+if (!existsSync(path.join(ROOT, HERO_FILE))) {
+  console.error(`Falta el material del catálogo de ejemplo (${HERO_FILE}).`);
+  process.exit(1);
+}
 mkdirSync(OUT, { recursive: true });
+
+// Copia del video protagonista preparada para el render cuadro a cuadro
+// (un cuadro clave cada pocos cuadros: posicionarse en cualquier instante es rápido y exacto).
+const ff = spawnSync("ffmpeg", [
+  "-v", "error", "-y", "-i", path.join(ROOT, HERO_FILE), "-an",
+  "-vf", "scale=672:-2,fps=30,format=yuv420p", "-c:v", "libx264", "-crf", "20", "-g", "6", "-bf", "0",
+  path.join(OUT, "hero.mp4"),
+]);
+if (ff.status !== 0) {
+  console.error("ffmpeg no pudo preparar el video:", String(ff.stderr));
+  process.exit(1);
+}
 
 // Variables de la tienda vacías a propósito: fuerza el modo demo aunque exista un .env.local.
 const server = spawn("npx", ["next", "start", "-p", String(PORT)], {
   cwd: ROOT,
   stdio: "ignore",
   detached: true,
-  env: {
-    ...process.env,
-    SUPABASE_URL: "",
-    SUPABASE_SERVICE_ROLE_KEY: "",
-    ADMIN_EMAILS: ADMIN,
-    NEXT_PUBLIC_SITE_URL: BASE,
-  },
+  env: { ...process.env, SUPABASE_URL: "", SUPABASE_SERVICE_ROLE_KEY: "", ADMIN_EMAILS: ADMIN, NEXT_PUBLIC_SITE_URL: BASE },
 });
 const stop = () => {
   try {
@@ -74,6 +86,15 @@ const rect = (page, selector) =>
     const r = el.getBoundingClientRect();
     return { x: r.x + scrollX, y: r.y + scrollY, w: r.width, h: r.height };
   });
+const tiles = (page, max) =>
+  page.locator(".masonry a").evaluateAll(
+    (els, n) =>
+      els.slice(0, n).map((el) => {
+        const r = el.getBoundingClientRect();
+        return { y: r.y + scrollY, h: r.height };
+      }),
+    max,
+  );
 
 async function login(page, email, next) {
   await page.goto(`${BASE}/ingresar?next=${next}`, { waitUntil: "networkidle" });
@@ -104,24 +125,18 @@ try {
   const m = await mobile.newPage();
 
   await m.goto(BASE, { waitUntil: "networkidle" });
+  const pageH = await m.evaluate(() => document.documentElement.scrollHeight);
   // Recorre la página para que carguen las portadas de más abajo.
-  for (let y = 0; y <= 3600; y += 600) {
+  for (let y = 0; y <= pageH; y += 600) {
     await m.evaluate((v) => scrollTo(0, v), y);
     await m.waitForTimeout(150);
   }
   await m.evaluate(() => scrollTo(0, 0));
   await m.waitForTimeout(400);
-  const HOME_H = 3300;
+  const HOME_H = Math.min(pageH, 3300);
   await shot(m, "home.png", { fullPage: true, clip: { x: 0, y: 0, width: 390, height: HOME_H } });
-  meta.home = {
-    height: HOME_H,
-    tiles: await m.locator(".masonry a").evaluateAll((els) =>
-      els.slice(0, 5).map((el) => {
-        const r = el.getBoundingClientRect();
-        return { y: r.y + scrollY, h: r.height };
-      }),
-    ),
-  };
+  meta.home = { height: HOME_H, tiles: await tiles(m, 5) };
+  meta.covers = await m.locator(".masonry a img").evaluateAll((els) => els.map((e) => new URL(e.src).pathname));
 
   await m.goto(`${BASE}/v/${HERO}`, { waitUntil: "networkidle" });
   await m.fill("input[name=email]", BUYER);
@@ -130,61 +145,58 @@ try {
   await shot(m, "detail.png", { fullPage: true });
   meta.detail = {
     height: await m.evaluate(() => document.documentElement.scrollHeight),
-    email: await rect(m, "input[name=email]"),
+    media: await rect(m, "main video"),
     payFirst: await rect(m, "button.btn >> nth=0"),
     paySecond: await rect(m, "button.btn >> nth=1"),
   };
 
-  // Entra con el link de acceso y compra tres videos.
+  // Entra con el link de acceso y compra el video y el pack de fotos.
   await login(m, BUYER, "/biblioteca");
-  for (const [slug, provider] of [
-    [HERO, "mercadopago"],
-    ["humo-denso", "mercadopago"],
-    ["aurora", "paypal"],
-  ]) {
-    await buy(m, slug, BUYER, provider);
-  }
-  await m.waitForTimeout(400);
-  await shot(m, "exito.png");
+  await buy(m, HERO, BUYER, "mercadopago");
+  await buy(m, PACK, BUYER, "paypal");
 
   await m.goto(`${BASE}/biblioteca`, { waitUntil: "networkidle" });
   await m.waitForTimeout(800);
-  await shot(m, "biblioteca.png", { fullPage: true, clip: { x: 0, y: 0, width: 390, height: 1500 } });
-  meta.biblioteca = {
-    height: 1500,
-    tiles: await m.locator(".masonry a").evaluateAll((els) =>
-      els.map((el) => {
-        const r = el.getBoundingClientRect();
-        return { y: r.y + scrollY, h: r.height };
-      }),
-    ),
-  };
+  const libH = Math.min(await m.evaluate(() => document.documentElement.scrollHeight), 1700);
+  await shot(m, "biblioteca.png", { fullPage: true, clip: { x: 0, y: 0, width: 390, height: libH } });
+  meta.biblioteca = { height: libH, tiles: await tiles(m, 3) };
 
   await m.goto(`${BASE}/ver/${HERO}`, { waitUntil: "networkidle" });
   await m.waitForTimeout(800);
   await shot(m, "ver.png");
+  meta.ver = { player: await rect(m, "main video") };
+
+  await m.goto(`${BASE}/ver/${PACK}`, { waitUntil: "networkidle" });
+  await m.waitForTimeout(1000);
+  const galH = Math.min(await m.evaluate(() => document.documentElement.scrollHeight), 1700);
+  await shot(m, "galeria.png", { fullPage: true, clip: { x: 0, y: 0, width: 390, height: galH } });
+  meta.galeria = { height: galH };
 
   // ── Más ventas, para que el panel no esté vacío ─────────────────────
   const desk = await browser.newContext({ viewport: { width: 760, height: 1000 }, deviceScaleFactor: 2, locale: "es-AR" });
   await desk.addInitScript(CLEAN);
   const d = await desk.newPage();
   const sales = [
-    ["colonia", "lucas@estudio.com", "paypal"],
-    ["halo-azul", "sofia@mail.com", "mercadopago"],
-    ["trama-110", "marco@agencia.com", "mercadopago"],
-    ["brasas", "julia@films.co", "paypal"],
-    ["costa-profunda", "tomas@mail.com", "mercadopago"],
-    ["espiral-gris", "emma@studio.io", "paypal"],
-    ["aurora", "nico@mail.com", "mercadopago"],
+    ["domingo", "lucas@mail.com", "paypal"],
+    ["retrato", "sofia@mail.com", "mercadopago"],
+    ["jardin", "marco@mail.com", "mercadopago"],
+    ["tu-algoritmo", "julia@mail.com", "paypal"],
+    ["gimnasio", "tomas@mail.com", "mercadopago"],
   ];
   for (const [slug, email, provider] of sales) await buy(d, slug, email, provider);
 
   await login(d, ADMIN, "/admin/videos");
-  await d.waitForTimeout(500);
-  await shot(d, "admin-videos.png");
   await d.goto(`${BASE}/admin/ventas`, { waitUntil: "networkidle" });
   await d.waitForTimeout(500);
   await shot(d, "admin-ventas.png");
+  // Las ventas de la demo, para mostrarlas en el video (sin emails).
+  meta.sales = await d.locator("tbody tr").evaluateAll((rows) =>
+    rows
+      .map((r) => [...r.querySelectorAll("td")].map((c) => c.textContent.trim()))
+      .filter((c) => c[5] === "Pagada")
+      .slice(0, 5)
+      .map((c) => ({ producto: c[2], medio: c[3], monto: c[4] })),
+  );
 
   writeFileSync(path.join(OUT, "meta.json"), JSON.stringify(meta, null, 2));
   console.log(`Capturas guardadas en ${path.relative(ROOT, OUT)}/`);

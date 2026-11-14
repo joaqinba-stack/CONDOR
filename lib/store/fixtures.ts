@@ -23,20 +23,6 @@ interface DemoItem {
 
 const items: DemoItem[] = [
   {
-    slug: "tu-algoritmo",
-    kind: "video",
-    title: "Tu algoritmo",
-    title_en: "Your algorithm",
-    description: "Video vertical completo, en alta calidad.",
-    usd: 12,
-    width: 720,
-    height: 1280,
-    duration: 10,
-    cover: "video-1.jpg",
-    trailer: "video-1-trailer.mp4",
-    full: "video-1.mp4",
-  },
-  {
     slug: "jardin",
     kind: "fotos",
     title: "Jardín",
@@ -50,6 +36,20 @@ const items: DemoItem[] = [
       { file: "foto-1.jpg", width: 1440, height: 1440 },
       { file: "foto-2.jpg", width: 1200, height: 1600 },
     ],
+  },
+  {
+    slug: "tu-algoritmo",
+    kind: "video",
+    title: "Tu algoritmo",
+    title_en: "Your algorithm",
+    description: "Video vertical completo, en alta calidad.",
+    usd: 12,
+    width: 720,
+    height: 1280,
+    duration: 10,
+    cover: "video-1.jpg",
+    trailer: "video-1-trailer.mp4",
+    full: "video-1.mp4",
   },
   {
     slug: "domingo",

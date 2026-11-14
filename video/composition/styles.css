@@ -124,8 +124,8 @@ body {
   top: 640px;
   width: 936px;
   list-style: none;
-  font-size: 74px;
-  line-height: 1.5;
+  font-size: 66px;
+  line-height: 1.55;
   font-weight: 500;
   letter-spacing: -0.035em;
 }
@@ -227,8 +227,18 @@ body {
   left: 0;
   top: 0;
   width: 672px;
-  display: block;
+  background: var(--bg);
   will-change: transform, opacity;
+}
+.layer > img {
+  display: block;
+  width: 100%;
+}
+/* Video real en movimiento, superpuesto sobre el lugar que ocupa en la captura. */
+.inlay {
+  position: absolute;
+  object-fit: cover;
+  background: #000;
 }
 .tap {
   position: absolute;
@@ -351,7 +361,8 @@ body {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--fg);
+  object-fit: cover;
+  background: var(--line);
 }
 .when {
   margin-left: auto;
@@ -509,6 +520,32 @@ body {
   line-height: 1.05;
   font-weight: 500;
   letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sales {
+  list-style: none;
+}
+.sales li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 26px 0 28px;
+  border-top: 2px solid var(--line);
+  font-size: 40px;
+  letter-spacing: -0.02em;
+}
+.sales li small {
+  display: block;
+  margin-top: 4px;
+  font-size: 28px;
+  letter-spacing: 0;
+  color: var(--mute);
+}
+.sales li b {
+  font-weight: 500;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 

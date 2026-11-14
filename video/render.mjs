@@ -27,14 +27,25 @@ if (!existsSync(path.join(import.meta.dirname, "captures", "meta.json"))) {
 }
 
 // Servidor de archivos mínimo (solo lectura, solo dentro del proyecto).
-const TYPES = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".woff2": "font/woff2" };
+const TYPES = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".woff2": "font/woff2", ".mp4": "video/mp4" };
 const server = createServer((req, res) => {
   const file = path.join(ROOT, decodeURIComponent(new URL(req.url, "http://x").pathname));
   if (!file.startsWith(ROOT + path.sep) || !existsSync(file) || !statSync(file).isFile()) {
     res.writeHead(404).end();
     return;
   }
-  res.writeHead(200, { "Content-Type": TYPES[path.extname(file)] ?? "application/octet-stream" });
+  const size = statSync(file).size;
+  const head = { "Content-Type": TYPES[path.extname(file)] ?? "application/octet-stream", "Accept-Ranges": "bytes" };
+  // Pedidos por rango: el navegador los necesita para posicionarse dentro de un video.
+  const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? "");
+  if (m) {
+    const start = m[1] ? Number(m[1]) : Math.max(0, size - Number(m[2]));
+    const end = m[1] && m[2] ? Math.min(Number(m[2]), size - 1) : size - 1;
+    res.writeHead(206, { ...head, "Content-Range": `bytes ${start}-${end}/${size}`, "Content-Length": end - start + 1 });
+    createReadStream(file, { start, end }).pipe(res);
+    return;
+  }
+  res.writeHead(200, { ...head, "Content-Length": size });
   createReadStream(file).pipe(res);
 });
 await new Promise((r) => server.listen(0, "127.0.0.1", r));
