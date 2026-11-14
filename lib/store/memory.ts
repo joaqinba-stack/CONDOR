@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { Entitlement, Order, Video } from "../types";
+import type { Entitlement, Order, ProductImage, Video } from "../types";
 import type { Store } from "./types";
 
 interface LoginToken {
@@ -17,9 +17,11 @@ export class MemoryStore implements Store {
   entitlements: Entitlement[] = [];
   settings = new Map<string, string>();
   tokens: LoginToken[] = [];
+  images: ProductImage[];
 
-  constructor(videos: Video[] = []) {
+  constructor(videos: Video[] = [], images: ProductImage[] = []) {
     this.videos = videos.map((v) => ({ ...v }));
+    this.images = images.map((i) => ({ ...i }));
   }
 
   async listPublishedVideos() {
@@ -52,6 +54,29 @@ export class MemoryStore implements Store {
   }
   async deleteVideo(id: string) {
     this.videos = this.videos.filter((v) => v.id !== id);
+    this.images = this.images.filter((i) => i.video_id !== id);
+  }
+
+  async listImages(videoId: string) {
+    return this.images.filter((i) => i.video_id === videoId).sort((a, b) => a.position - b.position);
+  }
+  private recount(videoId: string) {
+    const v = this.videos.find((x) => x.id === videoId);
+    if (v) v.image_count = this.images.filter((i) => i.video_id === videoId).length;
+  }
+  async addImage(videoId: string, image: { path: string; width: number; height: number }) {
+    const last = Math.max(-1, ...this.images.filter((i) => i.video_id === videoId).map((i) => i.position));
+    const row: ProductImage = { id: randomUUID(), video_id: videoId, position: last + 1, ...image };
+    this.images.push(row);
+    this.recount(videoId);
+    return row;
+  }
+  async removeImage(imageId: string) {
+    const row = this.images.find((i) => i.id === imageId) ?? null;
+    if (!row) return null;
+    this.images = this.images.filter((i) => i.id !== imageId);
+    this.recount(row.video_id);
+    return row;
   }
 
   async createOrder(input: Parameters<Store["createOrder"]>[0]) {

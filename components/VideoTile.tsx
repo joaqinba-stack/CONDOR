@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 export interface TileData {
   href: string;
   title: string;
+  /** "Video · 0:10" o "2 fotos" */
+  kind: string;
   meta: string;
   cover: string | null;
   trailer: string | null;
@@ -80,7 +82,10 @@ export function VideoTile({ data, index, animate = true }: { data: TileData; ind
         )}
       </div>
       <div className="flex items-baseline justify-between gap-4 px-2.5 pb-3 pt-2 text-[0.8rem] leading-tight">
-        <span className="text-fg">{data.title}</span>
+        <span className="text-fg">
+          {data.title}
+          <span className="text-dim"> · {data.kind}</span>
+        </span>
         <span className="text-mute transition-colors group-hover:text-fg">{data.meta}</span>
       </div>
     </Link>

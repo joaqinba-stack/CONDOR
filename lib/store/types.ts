@@ -1,4 +1,4 @@
-import type { Currency, Entitlement, Order, OrderStatus, Provider, Video, VideoInput } from "../types";
+import type { Currency, Entitlement, Order, OrderStatus, ProductImage, Provider, Video, VideoInput } from "../types";
 
 export interface NewOrder {
   email: string;
@@ -23,6 +23,13 @@ export interface Store {
   createVideo(input: VideoInput): Promise<Video>;
   updateVideo(id: string, patch: Partial<VideoInput>): Promise<Video | null>;
   deleteVideo(id: string): Promise<void>;
+
+  /** Fotos de un producto, en orden. */
+  listImages(videoId: string): Promise<ProductImage[]>;
+  /** Agrega una foto al final y actualiza `image_count`. */
+  addImage(videoId: string, image: { path: string; width: number; height: number }): Promise<ProductImage>;
+  /** Quita una foto y devuelve la que se quitó (para borrar el archivo). */
+  removeImage(imageId: string): Promise<ProductImage | null>;
 
   createOrder(input: NewOrder): Promise<Order>;
   getOrder(id: string): Promise<Order | null>;

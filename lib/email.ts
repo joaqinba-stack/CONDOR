@@ -43,7 +43,7 @@ export async function sendPurchaseEmail(order: Order, video: Video): Promise<voi
   const locale = (order.locale === "en" ? "en" : "es") as Locale;
   const t = dict(locale);
   const title = videoTitle(video, locale);
-  const url = await createLoginLink(order.email, `/ver/${video.slug}`, 7 * 24 * 60);
+  const url = await createLoginLink(order.email, `/ver/${video.slug}`, 7 * 24 * 60); // sirve para videos y fotos
   const loginUrl = `${env.siteUrl}/ingresar`;
   await sendEmail({
     to: order.email,

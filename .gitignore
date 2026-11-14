@@ -12,3 +12,8 @@ next-env.d.ts
 # video de presentación: archivos intermedios
 video/.frames
 video/captures
+
+# Material de la clienta: no se sube mientras el repositorio sea público.
+# (Quitar estas líneas recién cuando el repo esté privado.)
+/public/demo/
+/video/out/

@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { BuyPanel } from "@/components/BuyPanel";
 import { LoopVideo } from "@/components/LoopVideo";
 import { Shell } from "@/components/Shell";
-import { formatDuration, formatPrice } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import { getCountry, preferredCurrency } from "@/lib/geo";
-import { dict, getLocale, videoDescription, videoTitle } from "@/lib/i18n";
+import { dict, getLocale, kindLabel, videoDescription, videoTitle } from "@/lib/i18n";
 import { getSessionEmail, isAdminEmail } from "@/lib/session";
 import { getStore } from "@/lib/store";
 
@@ -56,8 +56,7 @@ export default async function VideoPage({ params }: Props) {
           <div className="max-w-[26rem] md:sticky md:top-8">
             <h1 className="font-medium">{title}</h1>
             <p className="text-mute">
-              {options[0].price}
-              {video.duration_seconds > 0 && <> · {formatDuration(video.duration_seconds)}</>}
+              {options[0].price} · {kindLabel(video, t)}
             </p>
             {description && <p className="mt-5 whitespace-pre-line text-mute">{description}</p>}
 

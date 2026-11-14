@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { deleteBunnyVideo } from "@/lib/bunny";
 import { bunnyEnabled, bunnyTrailersEnabled, env } from "@/lib/env";
 import { isEmail, normalizeEmail, slugify } from "@/lib/format";
+import { deletePhotoFiles } from "@/lib/photos";
 import { requireAdmin } from "@/lib/session";
 import { getStore } from "@/lib/store";
 import { SupabaseStore } from "@/lib/store/supabase";
@@ -69,15 +70,20 @@ export async function saveVideo(form: FormData): Promise<ActionResult> {
     } else {
       let slug = slugify(title);
       for (let i = 2; await store.getVideoBySlug(slug); i++) slug = `${slugify(title)}-${i}`;
+      const kind = form.get("kind") === "fotos" ? "fotos" : "video";
+      const w = Number(form.get("width"));
+      const h = Number(form.get("height"));
       video = await store.createVideo({
         ...fields,
+        kind,
+        image_count: 0,
         slug,
         bunny_video_id: null,
         trailer_video_id: null,
         trailer_url: null,
         cover_url: null,
-        width: 16,
-        height: 9,
+        width: kind === "fotos" && w > 0 ? Math.round(w) : 16,
+        height: kind === "fotos" && h > 0 ? Math.round(h) : 9,
         duration_seconds: 0,
         status: "borrador",
       });
@@ -103,7 +109,8 @@ export async function setVideoStatus(form: FormData): Promise<void> {
   const video = await store.getVideoById(id);
   if (!video) return;
   // No se publica algo que el comprador no podría ver.
-  if (status === "publicado" && !video.bunny_video_id && !env.isDemo) return;
+  const hasContent = video.kind === "fotos" ? video.image_count > 0 : !!video.bunny_video_id;
+  if (status === "publicado" && !hasContent && !env.isDemo) return;
   await store.updateVideo(id, { status });
   revalidatePath("/admin");
 }
@@ -120,6 +127,7 @@ export async function removeVideo(form: FormData): Promise<void> {
   const store = getStore();
   const video = await store.getVideoById(String(form.get("id")));
   if (!video) return;
+  const photoPaths = (await store.listImages(video.id)).map((i) => i.path);
   try {
     await store.deleteVideo(video.id);
   } catch {
@@ -131,8 +139,52 @@ export async function removeVideo(form: FormData): Promise<void> {
   try {
     if (video.bunny_video_id && bunnyEnabled()) await deleteBunnyVideo("full", video.bunny_video_id);
     if (video.trailer_video_id && bunnyTrailersEnabled()) await deleteBunnyVideo("trailer", video.trailer_video_id);
+    await deletePhotoFiles(photoPaths);
   } catch (err) {
     console.error("[admin removeVideo]", err);
+  }
+  revalidatePath("/admin");
+}
+
+/** Registra una foto que el navegador ya subió al bucket privado. */
+export async function registerPhoto(videoId: string, path: string, width: number, height: number): Promise<ActionResult> {
+  await requireAdmin();
+  const store = getStore();
+  const video = await store.getVideoById(videoId);
+  if (!video || video.kind !== "fotos") return { ok: false, error: "No se encontró el producto." };
+  // La ruta tiene que ser la que entregó /api/admin/photo-ticket para este producto.
+  if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/.test(path) || !path.startsWith(`${video.id}/`)) {
+    return { ok: false, error: "Ruta de foto inválida." };
+  }
+  if (!(width > 0 && height > 0 && width < 30000 && height < 30000)) return { ok: false, error: "Foto inválida." };
+  await store.addImage(video.id, { path, width: Math.round(width), height: Math.round(height) });
+  if (video.image_count === 0) await store.updateVideo(video.id, { width: Math.round(width), height: Math.round(height) });
+  return { ok: true, id: video.id };
+}
+
+/** Al terminar de subir las fotos: publica el producto si corresponde. */
+export async function finishPhotos(videoId: string): Promise<ActionResult> {
+  await requireAdmin();
+  const store = getStore();
+  const video = await store.getVideoById(videoId);
+  if (!video || video.kind !== "fotos") return { ok: false, error: "No se encontró el producto." };
+  if (video.status === "borrador" && video.publish_when_ready && video.image_count > 0 && video.cover_url) {
+    await store.updateVideo(video.id, { status: "publicado" });
+  }
+  revalidatePath("/admin");
+  return { ok: true, id: video.id };
+}
+
+export async function removePhoto(form: FormData): Promise<void> {
+  await requireAdmin();
+  const store = getStore();
+  const removed = await store.removeImage(String(form.get("image_id")));
+  if (!removed) return;
+  await deletePhotoFiles([removed.path]);
+  const video = await store.getVideoById(removed.video_id);
+  // Sin fotos no puede seguir a la venta.
+  if (video && video.image_count === 0 && video.status === "publicado") {
+    await store.updateVideo(video.id, { status: "borrador" });
   }
   revalidatePath("/admin");
 }

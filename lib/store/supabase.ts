@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Entitlement, Order, Video } from "../types";
+import type { Entitlement, Order, ProductImage, Video } from "../types";
 import type { Store } from "./types";
 
 /**
@@ -67,6 +67,47 @@ export class SupabaseStore implements Store {
   }
   async deleteVideo(id: string) {
     this.ok(await this.db.from("videos").delete().eq("id", id));
+  }
+
+  async listImages(videoId: string) {
+    return this.ok(
+      await this.db.from("product_images").select("*").eq("video_id", videoId).order("position", { ascending: true }),
+    ) as ProductImage[];
+  }
+  private async recount(videoId: string) {
+    const res = await this.db
+      .from("product_images")
+      .select("id", { count: "exact", head: true })
+      .eq("video_id", videoId);
+    if (res.error) throw new Error(`Supabase: ${res.error.message}`);
+    this.ok(await this.db.from("videos").update({ image_count: res.count ?? 0 }).eq("id", videoId));
+  }
+  async addImage(videoId: string, image: { path: string; width: number; height: number }) {
+    const last = this.ok(
+      await this.db
+        .from("product_images")
+        .select("position")
+        .eq("video_id", videoId)
+        .order("position", { ascending: false })
+        .limit(1),
+    ) as { position: number }[];
+    const row = this.ok(
+      await this.db
+        .from("product_images")
+        .insert({ video_id: videoId, position: (last[0]?.position ?? -1) + 1, ...image })
+        .select("*")
+        .single(),
+    ) as ProductImage;
+    await this.recount(videoId);
+    return row;
+  }
+  async removeImage(imageId: string) {
+    const rows = this.ok(
+      await this.db.from("product_images").delete().eq("id", imageId).select("*"),
+    ) as ProductImage[];
+    if (!rows[0]) return null;
+    await this.recount(rows[0].video_id);
+    return rows[0];
   }
 
   async createOrder(input: Parameters<Store["createOrder"]>[0]) {

@@ -1,5 +1,5 @@
 import { env } from "../env";
-import { demoVideos, DEMO_RATE } from "./fixtures";
+import { demoImages, demoVideos, DEMO_RATE } from "./fixtures";
 import { MemoryStore } from "./memory";
 import { SupabaseStore } from "./supabase";
 import type { Store } from "./types";
@@ -11,7 +11,7 @@ const g = globalThis as unknown as { __condorStore?: Store };
 export function getStore(): Store {
   if (g.__condorStore) return g.__condorStore;
   if (env.isDemo) {
-    const mem = new MemoryStore(demoVideos);
+    const mem = new MemoryStore(demoVideos, demoImages);
     mem.settings.set("usd_ars_rate", String(DEMO_RATE));
     g.__condorStore = mem;
   } else {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
+import { dict, kindLabel } from "@/lib/i18n";
 import { getStore } from "@/lib/store";
 import { refreshVideo, removeVideo, setVideoStatus } from "../actions";
 
@@ -10,14 +11,14 @@ export default async function AdminVideos() {
   return (
     <>
       <div className="mb-10 flex items-center justify-between gap-4">
-        <h1>Videos ({videos.length})</h1>
+        <h1>Productos ({videos.length})</h1>
         <Link href="/admin/videos/nuevo" className="btn">
-          Nuevo video
+          Nuevo producto
         </Link>
       </div>
 
       {videos.length === 0 ? (
-        <p className="text-mute">Todavía no cargaste ningún video. Empezá con “Nuevo video”.</p>
+        <p className="text-mute">Todavía no cargaste nada. Empezá con “Nuevo producto”.</p>
       ) : (
         <ul className="divide-y divide-line border-y border-line">
           {videos.map((v) => (
@@ -33,7 +34,7 @@ export default async function AdminVideos() {
                   {v.title}
                 </Link>
                 <p className="text-mute">
-                  {formatPrice(v.price_usd_cents, "USD")} · {formatPrice(v.price_ars_cents, "ARS")}
+                  {kindLabel(v, dict("es"))} · {formatPrice(v.price_usd_cents, "USD")} · {formatPrice(v.price_ars_cents, "ARS")}
                 </p>
               </div>
               <span className={v.status === "publicado" ? "text-fg" : "text-mute"}>{STATUS[v.status]}</span>
@@ -69,7 +70,7 @@ export default async function AdminVideos() {
         </ul>
       )}
       <p className="mt-6 max-w-[40rem] text-[0.8rem] text-dim">
-        Un video con ventas no se borra (los compradores perderían el acceso): al borrarlo solo se oculta de la tienda.
+        Un producto con ventas no se borra (los compradores perderían el acceso): al borrarlo solo se oculta de la tienda.
       </p>
     </>
   );

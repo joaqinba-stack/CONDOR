@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <nav className="flex flex-wrap gap-x-5">
           <NavLinks
             items={[
-              { href: "/admin/videos", label: "Videos" },
+              { href: "/admin/videos", label: "Productos" },
               { href: "/admin/ventas", label: "Ventas" },
               { href: "/admin/ajustes", label: "Ajustes" },
             ]}

@@ -3,10 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import * as tus from "tus-js-client";
-import { saveVideo } from "@/app/admin/actions";
+import { finishPhotos, registerPhoto, saveVideo } from "@/app/admin/actions";
+
+type Kind = "video" | "fotos";
 
 interface Initial {
   id?: string;
+  kind?: Kind;
   title?: string;
   description?: string;
   title_en?: string | null;
@@ -17,8 +20,10 @@ interface Initial {
   hasFull?: boolean;
   hasTrailer?: boolean;
   cover_url?: string | null;
+  photoCount?: number;
 }
 
+/** Sube un video directo a Bunny (subida reanudable). */
 async function uploadToBunny(videoId: string, kind: "full" | "trailer", file: File, onProgress: (pct: number) => void) {
   const res = await fetch("/api/admin/upload-ticket", {
     method: "POST",
@@ -42,22 +47,76 @@ async function uploadToBunny(videoId: string, kind: "full" | "trailer", file: Fi
   });
 }
 
+/** Sube una foto directo al bucket privado y la registra en el producto. */
+async function uploadPhoto(videoId: string, file: File) {
+  const bitmap = await createImageBitmap(file);
+  const { width, height } = bitmap;
+  bitmap.close();
+
+  const res = await fetch("/api/admin/photo-ticket", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ videoId, contentType: file.type }),
+  });
+  const ticket = (await res.json()) as { path?: string; url?: string; error?: string };
+  if (!res.ok || !ticket.path || !ticket.url) throw new Error(ticket.error ?? "No se pudo preparar la subida");
+
+  const put = await fetch(ticket.url, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+  if (!put.ok) throw new Error(`No se pudo subir ${file.name}`);
+
+  const saved = await registerPhoto(videoId, ticket.path, width, height);
+  if (!saved.ok) throw new Error(saved.error ?? `No se pudo registrar ${file.name}`);
+}
+
+/** Portada difuminada a partir de una foto, para mostrar en la tienda sin regalar la imagen. */
+async function blurredCover(file: File): Promise<{ cover: File; width: number; height: number }> {
+  const bitmap = await createImageBitmap(file);
+  const { width, height } = bitmap;
+  const W = 900;
+  const H = Math.round((height / width) * W);
+  // Se achica mucho y se vuelve a agrandar: borra el detalle en cualquier navegador.
+  const small = document.createElement("canvas");
+  small.width = 36;
+  small.height = Math.max(1, Math.round((H / W) * 36));
+  small.getContext("2d")!.drawImage(bitmap, 0, 0, small.width, small.height);
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(small, 0, 0, W, H);
+  bitmap.close();
+  const blob = await new Promise<Blob>((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("No se pudo generar la portada"))), "image/jpeg", 0.82),
+  );
+  return { cover: new File([blob], "portada.jpg", { type: "image/jpeg" }), width, height };
+}
+
 const label = "block text-mute";
 const hint = "mt-1.5 block text-[0.8rem] text-dim";
 
-export function VideoForm({ initial = {}, rate, uploadsEnabled, trailersEnabled }: {
+export function VideoForm({
+  initial = {},
+  rate,
+  uploadsEnabled,
+  trailersEnabled,
+  photosEnabled,
+}: {
   initial?: Initial;
   rate: number;
   uploadsEnabled: boolean;
   trailersEnabled: boolean;
+  photosEnabled: boolean;
 }) {
   const router = useRouter();
+  const [kind, setKind] = useState<Kind>(initial.kind ?? "video");
   const [usd, setUsd] = useState(initial.price_usd ?? "");
   const [ars, setArs] = useState(initial.price_ars ?? "");
   const [arsTouched, setArsTouched] = useState(!!initial.price_ars);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState<{ full?: number; trailer?: number }>({});
+  const [progress, setProgress] = useState<{ full?: number; trailer?: number; photos?: number }>({});
   const [step, setStep] = useState("");
 
   function onUsd(v: string) {
@@ -72,22 +131,44 @@ export function VideoForm({ initial = {}, rate, uploadsEnabled, trailersEnabled 
     const form = new FormData(e.currentTarget);
     const full = form.get("file_full") as File | null;
     const trailer = form.get("file_trailer") as File | null;
-    form.delete("file_full");
-    form.delete("file_trailer");
+    const photos = (form.getAll("file_photos") as File[]).filter((f) => f.size > 0);
+    const wantsBlur = form.get("blur_cover") === "on";
+    for (const k of ["file_full", "file_trailer", "file_photos", "blur_cover"]) form.delete(k);
+    form.set("kind", kind);
 
     setBusy(true);
     try {
+      if (kind === "fotos" && photos.length > 0) {
+        const cover = form.get("cover") as File | null;
+        if (wantsBlur && !(cover && cover.size > 0)) {
+          setStep("Generando la portada…");
+          const made = await blurredCover(photos[0]);
+          form.set("cover", made.cover);
+          form.set("width", String(made.width));
+          form.set("height", String(made.height));
+        }
+      }
+
       setStep("Guardando la ficha…");
       const saved = await saveVideo(form);
       if (!saved.ok || !saved.id) throw new Error(saved.error ?? "No se pudo guardar");
 
-      if (trailer && trailer.size > 0) {
-        setStep("Subiendo el tráiler…");
-        await uploadToBunny(saved.id, "trailer", trailer, (p) => setProgress((s) => ({ ...s, trailer: p })));
-      }
-      if (full && full.size > 0) {
-        setStep("Subiendo el video completo… no cierres esta pestaña.");
-        await uploadToBunny(saved.id, "full", full, (p) => setProgress((s) => ({ ...s, full: p })));
+      if (kind === "video") {
+        if (trailer && trailer.size > 0) {
+          setStep("Subiendo el tráiler…");
+          await uploadToBunny(saved.id, "trailer", trailer, (p) => setProgress((s) => ({ ...s, trailer: p })));
+        }
+        if (full && full.size > 0) {
+          setStep("Subiendo el video completo… no cierres esta pestaña.");
+          await uploadToBunny(saved.id, "full", full, (p) => setProgress((s) => ({ ...s, full: p })));
+        }
+      } else {
+        for (let i = 0; i < photos.length; i++) {
+          setStep(`Subiendo foto ${i + 1} de ${photos.length}…`);
+          await uploadPhoto(saved.id, photos[i]);
+          setProgress((s) => ({ ...s, photos: Math.round(((i + 1) / photos.length) * 100) }));
+        }
+        await finishPhotos(saved.id);
       }
       router.push("/admin");
       router.refresh();
@@ -100,6 +181,25 @@ export function VideoForm({ initial = {}, rate, uploadsEnabled, trailersEnabled 
   return (
     <form onSubmit={onSubmit} className="max-w-[40rem] space-y-8">
       {initial.id && <input type="hidden" name="id" value={initial.id} />}
+
+      {!initial.id && (
+        <fieldset>
+          <legend className="text-mute">¿Qué vas a vender?</legend>
+          <div className="mt-3 flex gap-2.5">
+            {(["video", "fotos"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={kind === k}
+                onClick={() => setKind(k)}
+                className={`btn ${kind === k ? "" : "btn-ghost"}`}
+              >
+                {k === "video" ? "Un video" : "Fotos"}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <label className={label}>
         Título
@@ -145,26 +245,61 @@ export function VideoForm({ initial = {}, rate, uploadsEnabled, trailersEnabled 
 
       <fieldset className="space-y-5 border-t border-line pt-6">
         <legend className="sr-only">Archivos</legend>
-        <label className={label}>
-          Video completo {initial.hasFull && <span className="text-fg">· ya cargado</span>}
-          <input name="file_full" type="file" accept="video/*" disabled={!uploadsEnabled} className="field" />
-          <span className={hint}>
-            {uploadsEnabled
-              ? "Es el que ve quien compra. Puede pesar varios GB: se sube directo y, si se corta, continúa."
-              : "La subida se habilita cuando configures Bunny (ver README)."}
-          </span>
-          {progress.full !== undefined && <Bar pct={progress.full} />}
-        </label>
-        <label className={label}>
-          Tráiler (opcional) {initial.hasTrailer && <span className="text-fg">· ya cargado</span>}
-          <input name="file_trailer" type="file" accept="video/*" disabled={!trailersEnabled} className="field" />
-          <span className={hint}>Clip corto, público, que se reproduce en la grilla. De acá sale también la portada.</span>
-          {progress.trailer !== undefined && <Bar pct={progress.trailer} />}
-        </label>
+
+        {kind === "video" ? (
+          <>
+            <label className={label}>
+              Video completo {initial.hasFull && <span className="text-fg">· ya cargado</span>}
+              <input name="file_full" type="file" accept="video/*" disabled={!uploadsEnabled} className="field" />
+              <span className={hint}>
+                {uploadsEnabled
+                  ? "Es el que ve quien compra. Puede pesar varios GB: se sube directo y, si se corta, continúa."
+                  : "La subida se habilita cuando configures Bunny (ver README)."}
+              </span>
+              {progress.full !== undefined && <Bar pct={progress.full} />}
+            </label>
+            <label className={label}>
+              Tráiler (opcional) {initial.hasTrailer && <span className="text-fg">· ya cargado</span>}
+              <input name="file_trailer" type="file" accept="video/*" disabled={!trailersEnabled} className="field" />
+              <span className={hint}>Clip corto, público, que se reproduce en la tienda. De acá sale también la portada.</span>
+              {progress.trailer !== undefined && <Bar pct={progress.trailer} />}
+            </label>
+          </>
+        ) : (
+          <>
+            <label className={label}>
+              Fotos {!!initial.photoCount && <span className="text-fg">· {initial.photoCount} ya cargadas</span>}
+              <input
+                name="file_photos"
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp"
+                disabled={!photosEnabled}
+                className="field"
+              />
+              <span className={hint}>
+                {photosEnabled
+                  ? "Podés elegir varias a la vez. Solo las ve quien compra."
+                  : "La subida se habilita cuando configures la base de datos (ver README)."}
+              </span>
+              {progress.photos !== undefined && <Bar pct={progress.photos} />}
+            </label>
+            <label className="flex items-start gap-3">
+              <input type="checkbox" name="blur_cover" defaultChecked={!initial.cover_url} className="mt-1" />
+              <span>
+                Generar la portada difuminada a partir de la primera foto
+                <span className={hint}>Así se ve en la tienda sin regalar la imagen. Si subís una portada abajo, se usa esa.</span>
+              </span>
+            </label>
+          </>
+        )}
+
         <label className={label}>
           Portada (opcional) {initial.cover_url && <span className="text-fg">· ya cargada</span>}
           <input name="cover" type="file" accept="image/jpeg,image/png,image/webp" className="field" />
-          <span className={hint}>JPG, PNG o WebP, hasta 4 MB. Necesaria si no subís tráiler.</span>
+          <span className={hint}>
+            JPG, PNG o WebP, hasta 4 MB. Es pública: es lo que se ve en la tienda antes de comprar.
+          </span>
         </label>
       </fieldset>
 
@@ -184,12 +319,12 @@ export function VideoForm({ initial = {}, rate, uploadsEnabled, trailersEnabled 
 
       <label className="flex items-center gap-3 border-t border-line pt-6">
         <input type="checkbox" name="publish_when_ready" defaultChecked={initial.publish_when_ready ?? true} />
-        Publicar automáticamente cuando termine de procesarse
+        {kind === "video" ? "Publicar automáticamente cuando termine de procesarse" : "Publicar apenas se suban las fotos"}
       </label>
 
       <div className="flex flex-wrap items-center gap-4">
         <button type="submit" disabled={busy} className="btn">
-          {busy ? "Guardando…" : initial.id ? "Guardar cambios" : "Crear video"}
+          {busy ? "Guardando…" : initial.id ? "Guardar cambios" : "Crear producto"}
         </button>
         <p aria-live="polite" className={error ? "text-[#ff8a7a]" : "text-mute"}>
           {error ?? (busy ? step : "")}
