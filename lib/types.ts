@@ -29,6 +29,10 @@ export interface Video {
   height: number;
   duration_seconds: number;
   status: VideoStatus;
+  /** Etiquetas (para filtrar la tienda). */
+  tags: string[];
+  /** ID del video en ManyVids, si se importó de ahí (evita importarlo dos veces). */
+  manyvids_id: string | null;
   /** Publicar automáticamente cuando Bunny termine de procesar. */
   publish_when_ready: boolean;
   created_at: string;

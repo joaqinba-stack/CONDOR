@@ -60,6 +60,29 @@ export interface BunnyVideoInfo {
   encodeProgress?: number;
 }
 
+/**
+ * (Servidor) Sube a un video ya creado en Bunny el contenido de un archivo remoto.
+ * Se usa al importar adelantos públicos: Bunny "traer desde URL" no devuelve el ID del video,
+ * así que se crea primero (createBunnyVideo) y se sube acá.
+ */
+export async function uploadBunnyFromUrl(
+  kind: LibraryKind,
+  videoId: string,
+  url: string,
+  headers: Record<string, string> = {},
+): Promise<void> {
+  const { id, key } = lib(kind);
+  const src = await fetch(url, { headers });
+  if (!src.ok || !src.body) throw new Error(`No se pudo bajar ${url} (${src.status})`);
+  const body = Buffer.from(await src.arrayBuffer());
+  const res = await fetch(`${API}/library/${id}/videos/${videoId}`, {
+    method: "PUT",
+    headers: { AccessKey: key, "Content-Type": "application/octet-stream" },
+    body,
+  });
+  if (!res.ok) throw new Error(`Bunny: no se pudo subir el video (${res.status})`);
+}
+
 export async function getBunnyVideo(kind: LibraryKind, videoId: string): Promise<BunnyVideoInfo | null> {
   const { id, key } = lib(kind);
   const res = await fetch(`${API}/library/${id}/videos/${videoId}`, {

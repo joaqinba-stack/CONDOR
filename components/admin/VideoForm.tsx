@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import * as tus from "tus-js-client";
 import { finishPhotos, registerPhoto, saveVideo } from "@/app/admin/actions";
+import { uploadToBunny } from "@/lib/upload-client";
 
 type Kind = "video" | "fotos";
 
@@ -21,30 +21,7 @@ interface Initial {
   hasTrailer?: boolean;
   cover_url?: string | null;
   photoCount?: number;
-}
-
-/** Sube un video directo a Bunny (subida reanudable). */
-async function uploadToBunny(videoId: string, kind: "full" | "trailer", file: File, onProgress: (pct: number) => void) {
-  const res = await fetch("/api/admin/upload-ticket", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ videoId, kind }),
-  });
-  const ticket = (await res.json()) as { endpoint?: string; headers?: Record<string, string>; error?: string };
-  if (!res.ok || !ticket.endpoint || !ticket.headers) throw new Error(ticket.error ?? "No se pudo preparar la subida");
-
-  await new Promise<void>((resolve, reject) => {
-    const upload = new tus.Upload(file, {
-      endpoint: ticket.endpoint,
-      retryDelays: [0, 3000, 5000, 10000, 20000, 60000],
-      headers: ticket.headers,
-      metadata: { filetype: file.type || "video/mp4", title: file.name },
-      onError: reject,
-      onProgress: (sent, total) => onProgress(Math.round((sent / total) * 100)),
-      onSuccess: () => resolve(),
-    });
-    upload.start();
-  });
+  tags?: string[];
 }
 
 /** Sube una foto directo al bucket privado y la registra en el producto. */
@@ -211,6 +188,12 @@ export function VideoForm({
         <textarea name="description" rows={4} defaultValue={initial.description} className="field resize-y" />
       </label>
 
+      <label className={label}>
+        Etiquetas
+        <input name="tags" maxLength={1200} defaultValue={(initial.tags ?? []).join(", ")} placeholder="Twerk, Outdoors" className="field" />
+        <span className={hint}>Separadas por coma. En la tienda, tocar una etiqueta muestra todo lo que la tiene.</span>
+      </label>
+
       <div className="grid grid-cols-2 gap-5">
         <label className={label}>
           Precio en dólares (USD)
@@ -223,7 +206,7 @@ export function VideoForm({
             onChange={(e) => onUsd(e.target.value)}
             className="field"
           />
-          <span className={hint}>Lo que se cobra por PayPal.</span>
+          <span className={hint}>Lo que se cobra en dólares. 0 en los dos precios = gratis.</span>
         </label>
         <label className={label}>
           Precio en pesos (ARS)

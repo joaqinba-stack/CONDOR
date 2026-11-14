@@ -44,7 +44,12 @@ export default async function VideoPage({ params }: Props) {
   const ars = { provider: "mercadopago" as const, price: formatPrice(video.price_ars_cents, "ARS") };
   const usd = { provider: "paypal" as const, price: formatPrice(video.price_usd_cents, "USD") };
   const currency = preferredCurrency(await getCountry());
-  const options = currency === "ARS" ? [ars, usd] : [usd, ars];
+  const free = video.price_usd_cents === 0 && video.price_ars_cents === 0;
+  const options: { provider: "mercadopago" | "paypal" | "free"; price: string }[] = free
+    ? [{ provider: "free", price: t.free }]
+    : currency === "ARS"
+      ? [ars, usd]
+      : [usd, ars];
 
   const title = videoTitle(video, locale);
   const description = videoDescription(video, locale);
@@ -59,6 +64,17 @@ export default async function VideoPage({ params }: Props) {
               {options[0].price} · {kindLabel(video, t)}
             </p>
             {description && <p className="mt-5 whitespace-pre-line text-mute">{description}</p>}
+            {video.tags.length > 0 && (
+              <ul className="mt-5 flex flex-wrap gap-x-3 gap-y-1 text-[0.8rem]">
+                {video.tags.map((tag) => (
+                  <li key={tag}>
+                    <Link href={`/?etiqueta=${encodeURIComponent(tag)}`} className="link">
+                      #{tag}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             <div className="mt-10">
               {owned ? (

@@ -56,6 +56,7 @@ export default async function EditVideo({ params }: { params: Promise<{ id: stri
           hasTrailer: !!v.trailer_video_id || !!v.trailer_url,
           cover_url: v.cover_url,
           photoCount: v.image_count,
+          tags: v.tags,
         }}
       />
     </>

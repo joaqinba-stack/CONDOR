@@ -9,7 +9,11 @@ export function toTile(v: Video, locale: Locale, opts: { currency?: Currency; hr
     href: opts.href ?? `/v/${v.slug}`,
     title: videoTitle(v, locale),
     kind: kindLabel(v, dict(locale)),
-    meta: opts.currency ? formatPrice(priceFor(v, opts.currency), opts.currency) : "",
+    meta: !opts.currency
+      ? ""
+      : v.price_usd_cents === 0 && v.price_ars_cents === 0
+        ? dict(locale).free
+        : formatPrice(priceFor(v, opts.currency), opts.currency),
     cover: v.cover_url,
     trailer: v.trailer_url,
     width: v.width || 16,

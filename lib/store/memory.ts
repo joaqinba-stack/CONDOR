@@ -24,8 +24,11 @@ export class MemoryStore implements Store {
     this.images = images.map((i) => ({ ...i }));
   }
 
-  async listPublishedVideos() {
-    return this.videos.filter((v) => v.status === "publicado");
+  async listPublishedVideos(tag?: string) {
+    return this.videos.filter((v) => v.status === "publicado" && (!tag || v.tags.includes(tag)));
+  }
+  async getVideoByManyvidsId(id: string) {
+    return this.videos.find((v) => v.manyvids_id === id) ?? null;
   }
   async listAllVideos() {
     return [...this.videos];

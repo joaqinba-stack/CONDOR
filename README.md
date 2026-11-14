@@ -47,8 +47,9 @@ En `/admin/ajustes` hay una lista que muestra qué está configurado y qué falt
 
 1. Crear un proyecto en <https://supabase.com>.
 2. **SQL Editor** → pegar y ejecutar, en orden,
-   [`0001_init.sql`](supabase/migrations/0001_init.sql) y
-   [`0002_fotos.sql`](supabase/migrations/0002_fotos.sql). Crean las tablas y dos buckets de
+   [`0001_init.sql`](supabase/migrations/0001_init.sql),
+   [`0002_fotos.sql`](supabase/migrations/0002_fotos.sql) y
+   [`0003_etiquetas.sql`](supabase/migrations/0003_etiquetas.sql). Crean las tablas y dos buckets de
    Storage: `covers` (público, portadas) y `fotos` (privado, las fotos que se venden).
 3. **Project Settings → API**: copiar la *Project URL* a `SUPABASE_URL` y la clave *service_role* a
    `SUPABASE_SERVICE_ROLE_KEY`. Esa clave es secreta: da acceso total a la base.
@@ -118,6 +119,17 @@ El plan gratuito de Vercel es para uso no comercial; para una tienda corresponde
 - **Cargar fotos:** *Nuevo producto* → *Fotos*. Se eligen una o varias; suben directo al bucket
   privado. La portada es pública (es lo que se ve antes de comprar): se puede subir una, o dejar
   que se genere **difuminada** a partir de la primera foto para no regalar la imagen.
+- **Gratis:** con precio 0 en dólares y en pesos, el producto se ofrece como "Obtener gratis": el
+  cliente deja su email y le llega el link de acceso (no pasa por ningún medio de pago).
+- **Etiquetas:** se cargan en cada producto, separadas por coma. En la tienda se muestran en la
+  página del producto y al tocarlas se ve todo lo que tiene esa etiqueta.
+- **Aviso 18+:** la tienda pide confirmar la mayoría de edad antes de mostrar cualquier imagen.
+  Está activo por defecto; para contenido no explícito se apaga con `AGE_GATE=off`. Es un aviso,
+  no una verificación de identidad.
+- **Importar un catálogo** (`/admin/importar`): crea muchos productos de una vez desde un
+  `catalogo.json` (ver "Importar desde ManyVids") y después permite subir varios videos completos
+  juntos; cada archivo se asocia a su producto por el número de ManyVids en el nombre o por un
+  título parecido. Cada producto se publica solo cuando su video completo termina de procesarse.
 - **Precios:** cada video tiene un precio en USD (PayPal) y otro en ARS (Mercado Pago). El de pesos
   se sugiere con la cotización de `/admin/ajustes`, pero lo podés escribir a mano. Cambiar la
   cotización no modifica los videos ya cargados.
@@ -180,10 +192,18 @@ además hace falta:
   capturas solas, una hoja resumen y un PDF. Los textos de cada paso están en
   `recorrido/pasos.json`.
 - **Video de presentación** (`video/`): ver [`video/README.md`](video/README.md).
-- **Importar desde ManyVids** (`importar/`): `npm run importar:manyvids` extrae solo el texto del
-  catálogo público de un perfil (títulos, descripciones, precios, duración, etiquetas, bundle y
-  datos técnicos) a `importar/out/manyvids.json` y `manyvids.xlsx`. No descarga imágenes ni
-  videos, ni guarda compradores o comentarios. Esos archivos no se versionan.
+- **Importar desde ManyVids** (`importar/`), en tres pasos:
+  1. `npm run importar:manyvids` extrae el texto del catálogo público de un perfil (títulos,
+     descripciones, precios, duración, etiquetas, bundle y datos técnicos) a
+     `importar/out/manyvids.json` y `manyvids.xlsx`. No guarda compradores ni comentarios.
+  2. `node importar/preparar.mjs [cotización]` aplica la regla de precios (pagos de menos de
+     US$ 5 → US$ 5; los gratis siguen gratis), calcula los pesos y genera `catalogo.json`.
+  3. `node importar/medios.mjs` baja la portada y el adelanto públicos de cada video, prepara las
+     versiones para la tienda y las deja disponibles para el modo demo. Los videos completos no
+     son públicos: los aporta la creadora y se suben desde `/admin/importar`.
+
+  Detrás de un proxy, los scripts de Node necesitan `NODE_USE_ENV_PROXY=1`. Nada de
+  `importar/out/` ni `public/demo/` se versiona.
 
 En modo demo, la página de “gracias por tu compra” incluye un link para ver el email que
 recibiría el comprador, así se puede recorrer la compra completa sin configurar nada.

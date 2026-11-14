@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Dict } from "@/lib/i18n";
 
-type Provider = "mercadopago" | "paypal";
+type Provider = "mercadopago" | "paypal" | "free";
 
 interface Option {
   provider: Provider;
@@ -36,6 +36,8 @@ export function BuyPanel({
     | "secure_note"
     | "owned"
     | "nav_login"
+    | "get_free"
+    | "free_note"
   >;
 }) {
   const [email, setEmail] = useState(initialEmail);
@@ -99,7 +101,13 @@ export function BuyPanel({
             className={`btn w-full justify-between ${i === 0 ? "" : "btn-ghost"}`}
           >
             <span>
-              {busy === o.provider ? t.redirecting : o.provider === "mercadopago" ? t.buy_with_mp : t.buy_with_paypal}
+              {busy === o.provider
+                ? t.redirecting
+                : o.provider === "free"
+                  ? t.get_free
+                  : o.provider === "mercadopago"
+                    ? t.buy_with_mp
+                    : t.buy_with_paypal}
             </span>
             <span className={i === 0 ? "opacity-60" : "text-mute"}>{o.price}</span>
           </button>
@@ -116,7 +124,9 @@ export function BuyPanel({
             </Link>
           </p>
         )}
-        {!error && !owned && <p className="text-dim">{t.secure_note}</p>}
+        {!error && !owned && (
+          <p className="text-dim">{options[0]?.provider === "free" ? t.free_note : t.secure_note}</p>
+        )}
       </div>
     </div>
   );

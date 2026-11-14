@@ -10,6 +10,20 @@ import { getStore } from "@/lib/store";
 import { SupabaseStore } from "@/lib/store/supabase";
 import { syncVideoFromBunny } from "@/lib/sync";
 
+/** "Twerk, Outdoors ,twerk" → ["Twerk", "Outdoors"] (sin repetidas, máx. 30). */
+function parseTags(s: string): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of s.split(",")) {
+    const t = raw.trim().replace(/\s+/g, " ").slice(0, 40);
+    if (t && !seen.has(t.toLowerCase())) {
+      seen.add(t.toLowerCase());
+      out.push(t);
+    }
+  }
+  return out.slice(0, 30);
+}
+
 export interface ActionResult {
   ok: boolean;
   error?: string;
@@ -60,6 +74,7 @@ export async function saveVideo(form: FormData): Promise<ActionResult> {
     price_usd_cents: usd,
     price_ars_cents: ars,
     publish_when_ready: form.get("publish_when_ready") === "on",
+    tags: parseTags(String(form.get("tags") ?? "")),
   };
 
   try {
@@ -75,6 +90,7 @@ export async function saveVideo(form: FormData): Promise<ActionResult> {
       const h = Number(form.get("height"));
       video = await store.createVideo({
         ...fields,
+        manyvids_id: null,
         kind,
         image_count: 0,
         slug,

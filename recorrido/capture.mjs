@@ -86,6 +86,7 @@ try {
   const phone = { ...devices["iPhone 13"], viewport: { width: 390, height: 844 } };
   const ctx = await browser.newContext({ ...phone, locale: "es-AR" });
   await ctx.addInitScript(CLEAN);
+  await ctx.addCookies([{ name: "mayor_edad", value: "1", url: BASE }]); // pasa el aviso 18+
   const p = await ctx.newPage();
 
   // 01 · Entra a la tienda
@@ -164,6 +165,7 @@ try {
   // 12 · Un comprador de otro país (navegador en inglés)
   const en = await browser.newContext({ ...phone, locale: "en-US" });
   await en.addInitScript(CLEAN);
+  await en.addCookies([{ name: "mayor_edad", value: "1", url: BASE }]); // pasa el aviso 18+
   const e = await en.newPage();
   await e.goto(`${BASE}/v/${VIDEO}`, { waitUntil: "networkidle" });
   await bottom(e);
@@ -173,6 +175,7 @@ try {
   // ── Computadora ─────────────────────────────────────────────────────
   const desk = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, locale: "es-AR" });
   await desk.addInitScript(CLEAN);
+  await desk.addCookies([{ name: "mayor_edad", value: "1", url: BASE }]); // pasa el aviso 18+
   const d = await desk.newPage();
   await d.goto(BASE, { waitUntil: "networkidle" });
   await settle(d, 1200);

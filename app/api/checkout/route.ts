@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { env, mpEnabled, paypalEnabled } from "@/lib/env";
 import { isEmail, normalizeEmail } from "@/lib/format";
+import { fulfillOrder } from "@/lib/fulfill";
 import { getLocale } from "@/lib/i18n";
 import { createPreference } from "@/lib/payments/mercadopago";
 import { createPaypalOrder } from "@/lib/payments/paypal";
@@ -24,12 +25,29 @@ export async function POST(req: NextRequest) {
   const provider = body.provider;
 
   if (!isEmail(email)) return fail("invalid_email");
-  if (provider !== "mercadopago" && provider !== "paypal") return fail("bad_request");
+  if (provider !== "mercadopago" && provider !== "paypal" && provider !== "free") return fail("bad_request");
 
   const store = getStore();
   const video = await store.getVideoBySlug(slug);
   if (!video || video.status !== "publicado") return fail("not_found", 404);
   if (await store.hasEntitlement(email, video.id)) return fail("owned", 409);
+
+  // Producto gratis: se da acceso a ese email y se le manda el link por mail. Solo quien
+  // tiene acceso a la casilla puede entrar a verlo.
+  const isFree = video.price_usd_cents === 0 && video.price_ars_cents === 0;
+  if (provider === "free" || isFree) {
+    if (!isFree) return fail("bad_request");
+    const order = await store.createOrder({
+      email,
+      video_id: video.id,
+      provider: "manual",
+      currency: "USD",
+      amount_cents: 0,
+      locale: await getLocale(),
+    });
+    await fulfillOrder(order.id, { provider: "manual", providerRef: "gratis", amountCents: 0, currency: "USD" });
+    return NextResponse.json({ url: `/checkout/exito?orden=${order.id}` });
+  }
 
   const demo = env.isDemo;
   if (!demo && provider === "mercadopago" && !mpEnabled()) return fail("provider_off", 503);

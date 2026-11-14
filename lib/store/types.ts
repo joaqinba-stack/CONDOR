@@ -14,9 +14,11 @@ export interface NewOrder {
  * Solo se usa desde el servidor.
  */
 export interface Store {
-  listPublishedVideos(): Promise<Video[]>;
+  /** Productos publicados; con `tag`, solo los que tienen esa etiqueta. */
+  listPublishedVideos(tag?: string): Promise<Video[]>;
   listAllVideos(): Promise<Video[]>;
   getVideoBySlug(slug: string): Promise<Video | null>;
+  getVideoByManyvidsId(id: string): Promise<Video | null>;
   getVideoById(id: string): Promise<Video | null>;
   /** Busca por id de Bunny, sea el video completo o el tráiler. */
   getVideoByBunnyId(guid: string): Promise<Video | null>;

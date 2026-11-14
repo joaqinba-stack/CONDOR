@@ -24,14 +24,15 @@ export class SupabaseStore implements Store {
     return res.data;
   }
 
-  async listPublishedVideos() {
+  async listPublishedVideos(tag?: string) {
+    let q = this.db.from("videos").select("*").eq("status", "publicado");
+    if (tag) q = q.contains("tags", [tag]);
+    return this.ok(await q.order("created_at", { ascending: false })) as Video[];
+  }
+  async getVideoByManyvidsId(id: string) {
     return this.ok(
-      await this.db
-        .from("videos")
-        .select("*")
-        .eq("status", "publicado")
-        .order("created_at", { ascending: false }),
-    ) as Video[];
+      await this.db.from("videos").select("*").eq("manyvids_id", id).maybeSingle(),
+    ) as Video | null;
   }
   async listAllVideos() {
     return this.ok(

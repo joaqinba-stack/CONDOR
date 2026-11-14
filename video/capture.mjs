@@ -122,6 +122,7 @@ try {
   // El perfil de iPhone descuenta la barra del navegador; acá se usa la pantalla completa.
   const mobile = await browser.newContext({ ...devices["iPhone 13"], viewport: { width: 390, height: 844 }, locale: "es-AR" });
   await mobile.addInitScript(CLEAN);
+  await mobile.addCookies([{ name: "mayor_edad", value: "1", url: BASE }]); // pasa el aviso 18+
   const m = await mobile.newPage();
 
   await m.goto(BASE, { waitUntil: "networkidle" });
@@ -175,6 +176,7 @@ try {
   // ── Más ventas, para que el panel no esté vacío ─────────────────────
   const desk = await browser.newContext({ viewport: { width: 760, height: 1000 }, deviceScaleFactor: 2, locale: "es-AR" });
   await desk.addInitScript(CLEAN);
+  await desk.addCookies([{ name: "mayor_edad", value: "1", url: BASE }]); // pasa el aviso 18+
   const d = await desk.newPage();
   const sales = [
     ["domingo", "lucas@mail.com", "paypal"],
