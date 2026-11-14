@@ -143,16 +143,34 @@ sacar una captura. Para videos muy sensibles, Bunny ofrece DRM (MediaCage) como 
 
 ## Medios de pago y tipo de contenido
 
-Antes de salir a vender conviene confirmar con cada medio de pago que acepta el contenido:
+Mercado Pago y PayPal sirven para contenido general o sugerente sin desnudos. **Para contenido
+explícito para adultos no sirven**: PayPal lo prohíbe expresamente y puede cerrar la cuenta
+reteniendo el saldo ([política](https://www.paypal.com/us/cshelp/article/HELP384)), y Mercado
+Pago puede suspender cuentas por actividades prohibidas.
 
-- **PayPal** prohíbe expresamente vender contenido sexual entregado en forma digital (imágenes,
-  videos, suscripciones) y puede cerrar la cuenta reteniendo el saldo
-  ([política](https://www.paypal.com/us/cshelp/article/HELP384)).
-- **Mercado Pago** puede suspender cuentas por actividades que considera prohibidas; conviene
-  revisar sus términos vigentes.
+Alternativas para contenido adulto. Ninguna confirma en sus páginas públicas que acepte
+vendedores de Argentina: lo primero es preguntarles por el alta y el cobro desde Argentina. Las
+comisiones son orientativas (de sitios comparadores) y hay que confirmarlas con cada uno.
 
-Con contenido sugerente sin desnudos el riesgo es moderado, pero existe. Si en algún momento se
-vende contenido explícito hay que reemplazar estos medios por procesadores que lo acepten.
+| Opción | Qué es | Costo aproximado | A favor | En contra |
+|---|---|---|---|---|
+| CCBill | Procesador de tarjetas para adultos, el más usado por sitios propios | ~10,8–14,5 % | Cobertura mundial, maneja contracargos, página de pago propia | Comisión alta, alta lenta, exige verificación de edad y consentimiento |
+| Segpay | Procesador de tarjetas para adultos | ~4–15 % según riesgo | Fuerte en Europa y EE. UU. | Menos cobertura en Asia y Oceanía, mismas exigencias |
+| Verotel | Procesador para adultos (Europa) | similar | Pensado para creadores y sitios chicos | Confirmar alta desde Argentina |
+| Epoch | Procesador para adultos | similar | Trayectoria larga | Confirmar alta desde Argentina |
+| Cripto (p. ej. NOWPayments) | Pasarela en criptomonedas | ~0,5–1 % | Barata, sin contracargos, funciona desde Argentina | Pocos compradores pagan así; confirmar en sus términos que acepta adultos |
+
+Para cobrar lo recaudado: transferencia internacional, Paxum (billetera muy usada en el rubro),
+Skrill o cripto.
+
+Recomendación: un procesador de tarjetas para adultos (CCBill o Segpay, el que acepte primero)
+como medio principal, y cripto como opción adicional. Sumarlo a la tienda sigue el patrón de
+`lib/payments/` (página de pago del procesador, aviso firmado, entrega con `lib/fulfill.ts`), y
+además hace falta:
+
+- verificación de mayoría de edad de los compradores (por ejemplo Yoti o VerifyMy);
+- constancia de edad y consentimiento de todas las personas que aparecen en cada video;
+- términos y condiciones, política de reembolsos y contacto visibles en el sitio.
 
 ## Material para mostrar la plataforma
 
@@ -162,6 +180,10 @@ vende contenido explícito hay que reemplazar estos medios por procesadores que 
   capturas solas, una hoja resumen y un PDF. Los textos de cada paso están en
   `recorrido/pasos.json`.
 - **Video de presentación** (`video/`): ver [`video/README.md`](video/README.md).
+- **Importar desde ManyVids** (`importar/`): `npm run importar:manyvids` extrae solo el texto del
+  catálogo público de un perfil (títulos, descripciones, precios, duración, etiquetas, bundle y
+  datos técnicos) a `importar/out/manyvids.json` y `manyvids.xlsx`. No descarga imágenes ni
+  videos, ni guarda compradores o comentarios. Esos archivos no se versionan.
 
 En modo demo, la página de “gracias por tu compra” incluye un link para ver el email que
 recibiría el comprador, así se puede recorrer la compra completa sin configurar nada.
