@@ -23,7 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale}>
       <body>
         {env.isDemo && (
-          <div className="bg-tile px-4 py-1.5 text-center text-[0.75rem] text-mute md:px-5">{t.demo_banner}</div>
+          <div data-demo-banner className="bg-tile px-4 py-1.5 text-center text-[0.75rem] text-mute md:px-5">{t.demo_banner}</div>
         )}
         {children}
       </body>

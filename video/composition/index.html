@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Condor — presentación</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="stage">
+      <!-- 1 · Apertura -->
+      <section class="scene" id="s-apertura">
+        <div class="drift" data-drift></div>
+        <div class="vignette"></div>
+        <p class="brand" data-t="marca"></p>
+        <h1 class="hero" data-lines="apertura"></h1>
+      </section>
+
+      <!-- 2 · Problema -->
+      <section class="scene" id="s-problema">
+        <ul class="pains" data-pains></ul>
+        <h1 class="hero remate" data-words="problema.remate"></h1>
+      </section>
+
+      <!-- 3 · La tienda -->
+      <section class="scene" id="s-tienda">
+        <h2 class="caption" data-lines="tienda"></h2>
+        <div class="phone" id="phone-a">
+          <div class="screen">
+            <div class="statusbar"><span>9:41</span><span class="sb"><i class="sig"></i><i class="bat"></i></span></div>
+            <div class="viewport">
+              <img class="layer" id="a-home" src="../captures/home.png" alt="" />
+              <img class="layer" id="a-detail" src="../captures/detail.png" alt="" />
+              <div class="tap" id="a-tap"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 · El cobro -->
+      <section class="scene" id="s-cobro">
+        <h2 class="caption" data-lines="cobro.titulo"></h2>
+        <div class="pay-cards" data-pay></div>
+        <p class="note" data-t="cobro.nota"></p>
+      </section>
+
+      <!-- 5 · La entrega -->
+      <section class="scene" id="s-entrega">
+        <h2 class="caption" data-lines="entrega.titulo"></h2>
+        <div class="approved" id="approved">
+          <svg viewBox="0 0 120 120" width="120" height="120">
+            <circle id="ok-ring" cx="60" cy="60" r="54" fill="none" stroke="#f2f2f2" stroke-width="5" />
+            <path id="ok-check" d="M38 62 L54 78 L84 46" fill="none" stroke="#f2f2f2" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span data-t="entrega.aprobado"></span>
+        </div>
+        <div class="mail" id="mail">
+          <div class="mail-head"><span class="avatar"></span><span data-t="marca"></span><span class="when">ahora</span></div>
+          <p class="mail-subject" data-t="entrega.email.asunto"></p>
+          <p class="mail-body" data-t="entrega.email.cuerpo"></p>
+          <span class="mail-btn" data-t="entrega.email.boton"></span>
+          <div class="tap" id="mail-tap"></div>
+        </div>
+        <div class="phone" id="phone-b">
+          <div class="screen">
+            <div class="statusbar"><span>9:41</span><span class="sb"><i class="sig"></i><i class="bat"></i></span></div>
+            <div class="viewport">
+              <img class="layer" id="b-lib" src="../captures/biblioteca.png" alt="" />
+              <img class="layer" id="b-ver" src="../captures/ver.png" alt="" />
+              <div class="tap" id="b-tap"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 · El panel -->
+      <section class="scene" id="s-panel">
+        <h2 class="caption" data-lines="panel.titulo"></h2>
+        <div class="window" id="window">
+          <div class="win-bar"><span data-t="marca"></span><span class="win-tabs"><b id="tab-videos">Videos</b><b id="tab-ventas">Ventas</b><b>Ajustes</b></span></div>
+          <div class="win-body" id="win-form">
+            <p class="win-title">Nuevo video</p>
+            <label>Título<span class="input"><span id="f-title"></span><i class="caret" id="caret"></i></span></label>
+            <div class="row">
+              <label>Precio en dólares<span class="input"><span id="f-usd"></span></span></label>
+              <label>Precio en pesos<span class="input"><span id="f-ars"></span></span></label>
+            </div>
+            <label>Video completo
+              <span class="input file"><span id="f-file" data-t="panel.archivo"></span><span id="f-pct">0%</span></span>
+              <span class="bar"><i id="f-bar"></i></span>
+            </label>
+            <div class="status"><span id="st-proc">Procesando…</span><span id="st-pub">Publicado ✓</span></div>
+          </div>
+          <div class="win-body" id="win-sales">
+            <p class="win-title">Ventas</p>
+            <div class="stat"><span>Ventas pagadas</span><b id="v-count">0</b></div>
+            <div class="stat"><span>Mercado Pago</span><b id="v-ars">$ 0</b></div>
+            <div class="stat"><span>PayPal</span><b id="v-usd">US$ 0</b></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 · Beneficios -->
+      <section class="scene" id="s-beneficios">
+        <ol class="benefits" data-benefits></ol>
+      </section>
+
+      <!-- 8 · Cierre -->
+      <section class="scene" id="s-cierre">
+        <div class="drift" data-drift></div>
+        <div class="vignette"></div>
+        <p class="brand big" data-t="marca"></p>
+        <h1 class="hero" data-lines="cierre"></h1>
+        <p class="contact" data-t="contacto"></p>
+      </section>
+    </div>
+
+    <script src="/node_modules/gsap/dist/gsap.min.js"></script>
+    <script src="timeline.js"></script>
+  </body>
+</html>
