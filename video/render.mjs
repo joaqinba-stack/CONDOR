@@ -3,9 +3,10 @@
 //
 //   npm run video:render                 → video completo (con y sin audio)
 //   node video/render.mjs --frames 3,12  → solo imágenes de esos segundos (para revisar)
+//   node video/render.mjs --audio        → rehace solo la base sonora sobre el video ya renderizado
 //
 import { spawn } from "node:child_process";
-import { createReadStream, existsSync, mkdirSync, statSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -58,7 +59,7 @@ async function buildAudio(file, duration, cuts) {
   notes.forEach((f, i) => {
     inputs.push("-f", "lavfi", "-t", String(duration), "-i", `sine=frequency=${f}:sample_rate=48000`);
     inputs.push("-f", "lavfi", "-t", String(duration), "-i", `sine=frequency=${(f * 1.004).toFixed(3)}:sample_rate=48000`);
-    filters.push(`[${i * 2}:a][${i * 2 + 1}:a]amix=inputs=2:normalize=0,tremolo=f=${(0.09 + i * 0.04).toFixed(2)}:d=0.6,volume=${(0.16 - i * 0.02).toFixed(2)}[n${i}]`);
+    filters.push(`[${i * 2}:a][${i * 2 + 1}:a]amix=inputs=2:normalize=0,tremolo=f=${(0.12 + i * 0.05).toFixed(2)}:d=0.6,volume=${(0.16 - i * 0.02).toFixed(2)}[n${i}]`);
   });
   const base = notes.length * 2;
   const accents = cuts.filter((t) => t > 0.5);
@@ -69,9 +70,30 @@ async function buildAudio(file, duration, cuts) {
   const mix = [...notes.map((_, i) => `[n${i}]`), ...accents.map((_, i) => `[a${i}]`)].join("");
   filters.push(
     `${mix}amix=inputs=${notes.length + accents.length}:normalize=0,lowpass=f=2600,aecho=0.8:0.7:90|180:0.35|0.25,` +
-      `afade=t=in:d=1.5,afade=t=out:st=${(duration - 2).toFixed(2)}:d=2,alimiter=limit=0.8,aformat=channel_layouts=stereo[out]`,
+      `volume=5.5,afade=t=in:d=1.5,afade=t=out:st=${(duration - 2).toFixed(2)}:d=2,alimiter=limit=0.7,aformat=channel_layouts=stereo[out]`,
   );
   await run("ffmpeg", ["-y", ...inputs, "-filter_complex", filters.join(";"), "-map", "[out]", "-t", String(duration), "-c:a", "aac", "-b:a", "160k", file]);
+}
+
+async function addAudio(silent, duration, cuts) {
+  mkdirSync(FRAMES, { recursive: true });
+  const audio = path.join(FRAMES, "base.m4a");
+  await buildAudio(audio, duration, cuts);
+  const withAudio = path.join(OUT, `${NAME}.mp4`);
+  await run("ffmpeg", ["-y", "-i", silent, "-i", audio, "-c:v", "copy", "-c:a", "copy", "-shortest", "-movflags", "+faststart", withAudio]);
+  return withAudio;
+}
+
+if (process.argv.includes("--audio")) {
+  const guion = JSON.parse(readFileSync(path.join(import.meta.dirname, "guion.json"), "utf8"));
+  const silent = path.join(OUT, `${NAME}-sin-audio.mp4`);
+  if (!existsSync(silent)) {
+    console.error("Todavía no hay video renderizado: corré `npm run video:render`.");
+    process.exit(1);
+  }
+  console.log(`Listo:\n  ${path.relative(ROOT, await addAudio(silent, guion.duracion, Object.values(guion.tiempos)))}`);
+  server.close();
+  process.exit(0);
 }
 
 const only = process.argv.includes("--frames") ? process.argv[process.argv.indexOf("--frames") + 1].split(",").map(Number) : null;
@@ -120,11 +142,7 @@ try {
     await done;
     process.stdout.write(`\r  ${total} cuadros en ${Math.round((Date.now() - started) / 1000)} s\n`);
 
-    const audio = path.join(FRAMES, "base.m4a");
-    mkdirSync(FRAMES, { recursive: true });
-    await buildAudio(audio, duration, cuts);
-    const withAudio = path.join(OUT, `${NAME}.mp4`);
-    await run("ffmpeg", ["-y", "-i", silent, "-i", audio, "-c:v", "copy", "-c:a", "copy", "-shortest", "-movflags", "+faststart", withAudio]);
+    const withAudio = await addAudio(silent, duration, cuts);
     console.log(`Listo:\n  ${path.relative(ROOT, withAudio)}\n  ${path.relative(ROOT, silent)}`);
   }
 } finally {
