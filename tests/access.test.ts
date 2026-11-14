@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { getProductAccess } from "@/lib/access";
 import { setStoreForTests } from "@/lib/store";
-import { demoImages, demoVideos } from "@/lib/store/fixtures";
+import { demoFullVideo, demoImages, demoVideos } from "@/lib/store/fixtures";
 import { MemoryStore } from "@/lib/store/memory";
 
 let store: MemoryStore;
@@ -50,7 +50,9 @@ describe("Acceso al contenido comprado", () => {
     const a = await getProductAccess(buyer, video.slug);
     expect(a.status).toBe("ok");
     if (a.status !== "ok") return;
-    expect(a.demoSrc).toMatch(/^\/demo\/video-\d\.mp4$/);
+    // El video completo de la demo (sea del catálogo de ejemplo o del importado).
+    expect(a.demoSrc).toBe(demoFullVideo[video.slug]);
+    expect(a.demoSrc).toMatch(/^\/demo\/.+\.mp4$/);
     expect(a.photos).toEqual([]);
   });
 
